@@ -11,7 +11,48 @@ USE primaryfeed;
 DELIMITER $$
 
 -- ─────────────────────────────────────────
--- TRIGGER 1: validate role before inserting into staff
+-- TRIGGER 1: Automatically increments or creates an inventory batch when
+-- a new donation item is inserted.
+-- ─────────────────────────────────────────
+
+DROP TRIGGER IF EXISTS trg_after_donation_items_insert$$
+
+CREATE TRIGGER trg_after_donation_items_insert
+AFTER INSERT ON donation_items
+FOR EACH ROW
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM inventories i
+    JOIN donations   d ON d.donation_id = NEW.donation_id
+    WHERE i.food_sku    = NEW.food_sku
+      AND i.branch_id   = d.branch_id
+      AND i.unit        = NEW.unit
+      AND i.expiry_date = NEW.expiry_date
+  ) THEN
+    -- Batch exists: increment quantity
+    UPDATE inventories i
+    JOIN donations d ON d.donation_id = NEW.donation_id
+    SET i.quantity = i.quantity + NEW.quantity
+    WHERE i.food_sku    = NEW.food_sku
+      AND i.branch_id   = d.branch_id
+      AND i.unit        = NEW.unit
+      AND i.expiry_date = NEW.expiry_date;
+    INSERT INTO trigger_logs (trigger_name, message)
+    VALUES ('trg_after_donation_items_insert', CONCAT('Incremented inventory for SKU: ', NEW.food_sku));
+  ELSE
+    -- No matching batch: create a new inventory row
+    INSERT INTO inventories (food_sku, branch_id, quantity, unit, expiry_date)
+    SELECT NEW.food_sku, d.branch_id, NEW.quantity, NEW.unit, NEW.expiry_date
+    FROM donations d
+    WHERE d.donation_id = NEW.donation_id;
+    INSERT INTO trigger_logs (trigger_name, message)
+    VALUES ('trg_after_donation_items_insert', CONCAT('Created new inventory batch for SKU: ', NEW.food_sku));
+  END IF;
+END$$
+
+-- ─────────────────────────────────────────
+-- TRIGGER 2: validate role before inserting into staff
 -- Only users with role=0 may have a row in the staff table
 -- ─────────────────────────────────────────
 DROP TRIGGER IF EXISTS trg_staff_check_role$$
@@ -35,7 +76,7 @@ BEGIN
 END$$
 
 -- ─────────────────────────────────────────
--- TRIGGER 2: validate role before inserting into volunteers
+-- TRIGGER 3: validate role before inserting into volunteers
 -- Only users with role=1 may have a row in the volunteers table
 -- ─────────────────────────────────────────
 DROP TRIGGER IF EXISTS trg_volunteers_check_role$$
@@ -59,8 +100,8 @@ BEGIN
 END$$
 
 -- ─────────────────────────────────────────
--- TRIGGER 3: prevent role from being changed on users
---            if it would orphan or conflict with subtype rows
+-- TRIGGER 4: prevent role from being changed on users
+-- if it would orphan or conflict with subtype rows
 -- ─────────────────────────────────────────
 DROP TRIGGER IF EXISTS trg_users_prevent_role_change$$
 
@@ -72,6 +113,32 @@ BEGIN
     SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Cannot change user role directly. Delete the subtype row first, then update the role.';
   END IF;
+END$$
+
+-- ─────────────────────────────────────────
+-- TRIGGER 5: trg_after_distribution_items_insert
+-- Decrements inventory batch quantity when a distribution item is inserted.
+DROP TRIGGER IF EXISTS trg_after_distribution_items_insert$$
+
+CREATE TRIGGER trg_after_distribution_items_insert
+AFTER INSERT ON distribution_items
+FOR EACH ROW
+BEGIN
+  -- Check if decrement would bring inventory below 0
+  IF (SELECT quantity FROM inventories WHERE inventory_id = NEW.inventory_id) < NEW.quantity THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Insufficient stock: quantity would go below 0.';
+  END IF;
+
+  -- Decrement inventory
+  UPDATE inventories
+  SET quantity = quantity - NEW.quantity
+  WHERE inventory_id = NEW.inventory_id;
+
+  -- Log the decrement
+  INSERT INTO trigger_logs (trigger_name, message)
+  VALUES ('trg_after_distribution_items_insert',
+    CONCAT('Decremented inventory_id: ', NEW.inventory_id, ' by ', NEW.quantity));
 END$$
 
 DELIMITER ;

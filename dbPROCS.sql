@@ -37,7 +37,6 @@ CREATE PROCEDURE record_donation(
 )
 BEGIN
   DECLARE v_donation_id  INT;
-  DECLARE v_inventory_id INT;
 
   -- Roll back everything if any step fails
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -54,30 +53,9 @@ BEGIN
 
     SET v_donation_id = LAST_INSERT_ID();
 
-    -- Step 2: Check if a batch with the same SKU and expiry already exists at this branch
-    SELECT inventory_id INTO v_inventory_id
-    FROM inventories
-    WHERE food_sku    = p_food_sku
-      AND branch_id   = p_branch_id
-      AND expiry_date = p_expiry_date
-    LIMIT 1;
-
-    IF v_inventory_id IS NOT NULL THEN
-      -- Step 3a: Batch exists — increment its quantity
-      UPDATE inventories
-      SET quantity = quantity + p_quantity
-      WHERE inventory_id = v_inventory_id;
-    ELSE
-      -- Step 3b: No matching batch — create a new inventory row
-      INSERT INTO inventories (food_sku, branch_id, quantity, unit, expiry_date)
-      VALUES (p_food_sku, p_branch_id, p_quantity, p_unit, p_expiry_date);
-
-      SET v_inventory_id = LAST_INSERT_ID();
-    END IF;
-
-    -- Step 4: Record the donation item linked to the inventory batch
-    INSERT INTO donation_items (donation_id, quantity, inventory_id)
-    VALUES (v_donation_id, p_quantity, v_inventory_id);
+    -- Step 2: Insert donation item — trigger handles inventory automatically
+    INSERT INTO donation_items (donation_id, food_sku, quantity, unit, expiry_date)
+    VALUES (v_donation_id, p_food_sku, p_quantity, p_unit, p_expiry_date);
 
   COMMIT;
 END$$
@@ -152,11 +130,6 @@ BEGIN
     -- Step 4: Record the distribution item linked to the selected inventory batch
     INSERT INTO distribution_items (distribution_id, quantity, inventory_id)
     VALUES (v_distribution_id, p_quantity, v_inventory_id);
-
-    -- Step 5: Decrement inventory from the selected batch
-    UPDATE inventories
-    SET quantity = quantity - p_quantity
-    WHERE inventory_id = v_inventory_id;
 
   COMMIT;
 END$$

@@ -36,7 +36,7 @@ LIMIT 1;
   +-------------+-----------------------+-----------------+-------------+----------------+
   | donation_id | food_bank             | branch_name     | donor_name  | donation_date  |
   |-------------|-----------------------|-----------------|-------------|----------------|
-  | 9           | Boston Area Food Bank | Downtown Boston | John Carter | 2026-04-01 ... |
+  |          11 | Boston Area Food Bank | Downtown Boston | John Carter | 2026-04-01 ... |
   +-------------+-----------------------+-----------------+-------------+----------------+
 */
 
@@ -49,14 +49,18 @@ SELECT '[ Verification 2 ] Checking donation item linked to inventory batch...' 
 SELECT
   di.donation_id,
   di.donation_item_id,
-  fi.sku,
+  di.food_sku,
   fi.food_name,
   di.quantity,
-  i.expiry_date,
+  di.expiry_date,
   i.quantity       AS current_inventory_qty
 FROM donation_items di
-JOIN inventories    i  ON i.inventory_id = di.inventory_id
-JOIN food_items     fi ON fi.sku         = i.food_sku
+JOIN donations      d  ON d.donation_id  = di.donation_id
+JOIN inventories    i  ON i.food_sku     = di.food_sku
+                      AND i.branch_id    = d.branch_id
+                      AND i.unit         = di.unit
+                      AND i.expiry_date  = di.expiry_date
+JOIN food_items     fi ON fi.sku         = i.food_sku		
 WHERE di.donation_id = (SELECT MAX(donation_id) FROM donations);
 
 /*
@@ -66,7 +70,7 @@ WHERE di.donation_id = (SELECT MAX(donation_id) FROM donations);
   +-------------+------------------+---------+------------------+----------+-----------------------+---------------------+
   | donation_id | donation_item_id | sku     | food_name        | quantity | expiry_date         | current_inventory_qty |
   |-------------|------------------|---------|------------------|----------|-----------------------|---------------------|
-  | 9           |               11 | SKU-001 | Canned Chickpeas | 30       | 2027-12-31 00:00:00 | 30                    |
+  |          11 |               15 | SKU-001 | Canned Chickpeas | 30       | 2027-12-31 00:00:00 |                    30 |
   +-------------+------------------+---------+------------------+----------+-----------------------+---------------------+
 */
 
@@ -132,10 +136,10 @@ ORDER BY i.expiry_date ASC;
   +--------------+---------+------------------+-----------------+---------------+---------------------+
   | inventory_id | sku     | food_name        | branch_name     | remaining_qty | expiry_date         |
   |--------------|---------|------------------|-----------------|---------------|---------------------|
-  | 2            | SKU-001 | Canned Chickpeas | Downtown Boston | 35            | 2026-04-03 00:00:00 |
-  | 1            | SKU-001 | Canned Chickpeas | Downtown Boston | 120           | 2026-12-31 00:00:00 |
+  | 2            | SKU-001 | Canned Chickpeas | Downtown Boston | 24            | 2026-04-03 00:00:00 |
+  | 1            | SKU-001 | Canned Chickpeas | Downtown Boston | 118           | 2026-12-31 00:00:00 |
   | (new)        | SKU-001 | Canned Chickpeas | Downtown Boston | 30            | 2027-12-31 00:00:00 |
-  (batch 2: 40 - 5 distributed = 35)
+  (batch 2: 29 - 5 distributed = 24)
   +--------------+---------+------------------+-----------------+---------------+---------------------+
 */
 

@@ -30,10 +30,10 @@ ORDER BY i.expiry_date ASC;
   +---------+------------------+----------+--------+---------------------+-----------------+
   | sku     | food_name        | quantity | unit   | expiry_date         | branch_name     |
   |---------|------------------|----------|--------|---------------------|-----------------|
-  | SKU-001 | Canned Chickpeas |       40 | cans   | 2026-04-03 00:00:00 | Downtown Boston |
-  | SKU-002 | Whole Milk (1L)  |       30 | liters | 2026-04-10 00:00:00 | Downtown Boston |
-  | SKU-011 | Canned Tomatoes  |       60 | cans   | 2026-10-01 00:00:00 | Downtown Boston |
-  | SKU-001 | Canned Chickpeas |      120 | cans   | 2026-12-31 00:00:00 | Downtown Boston |
+  | SKU-001 | Canned Chickpeas |       29 | cans   | 2026-04-03 00:00:00 | Downtown Boston |
+  | SKU-002 | Whole Milk (1L)  |       25 | liters | 2026-04-10 00:00:00 | Downtown Boston |
+  | SKU-011 | Canned Tomatoes  |       57 | cans   | 2026-10-01 00:00:00 | Downtown Boston |
+  | SKU-001 | Canned Chickpeas |      118 | cans   | 2026-12-31 00:00:00 | Downtown Boston |
   +---------+------------------+----------+--------+---------------------+-----------------+
 */
 
@@ -64,7 +64,7 @@ ORDER BY i.expiry_date ASC;
   +-----------------+---------+------------------+----------+------+---------------------+
   | branch_name     | sku     | food_name        | quantity | unit | expiry_date         |
   |-----------------|---------|------------------|----------|------|---------------------|
-  | Downtown Boston | SKU-001 | Canned Chickpeas | 40       | cans | 2026-04-03 00:00:00 |
+  | Downtown Boston | SKU-001 | Canned Chickpeas | 29       | cans | 2026-04-03 00:00:00 |
   +-----------------+---------+------------------+----------+------+---------------------+
 */
 
@@ -155,14 +155,14 @@ SELECT
 FROM food_bank_branches fbb
 JOIN food_banks         fb ON fb.food_bank_id = fbb.food_bank_id
 
--- Inline view: total received per branch via donation_items → inventories
+-- Inline view: total received per branch via donation_items → donations
 LEFT JOIN (
   SELECT
-    i.branch_id,
+    d.branch_id,
     SUM(di.quantity) AS total_received
   FROM donation_items di
-  JOIN inventories    i ON i.inventory_id = di.inventory_id
-  GROUP BY i.branch_id
+  JOIN donations      d ON d.donation_id = di.donation_id
+  GROUP BY d.branch_id
 ) received ON received.branch_id = fbb.branch_id
 
 -- Inline view: total distributed per branch via distribution_items → inventories
@@ -182,15 +182,15 @@ ORDER BY surplus DESC;
   +-----------------+--------------------------+----------------+-------------------+---------+
   | branch_name     | food_bank_name           | total_received | total_distributed | surplus |
   |-----------------|--------------------------|----------------|-------------------|---------|
-  | Downtown Boston | Boston Area Food Bank    |             80 |                17 |      63 |
-  | Jamaica Plain   | Boston Area Food Bank    |             40 |                 5 |      35 |
-  | Lynn North      | Greater Lynn Food Pantry |             35 |                 6 |      29 |
-  | South End       | Boston Area Food Bank    |             30 |                 5 |      25 |
-  | Dorchester      | Boston Area Food Bank    |             25 |                 3 |      22 |
-  | Lynn Central    | Greater Lynn Food Pantry |             20 |                 2 |      18 |
-  | Lynn Harbor     | Greater Lynn Food Pantry |             15 |                 4 |      11 |
-  | Lynn Woods      | Greater Lynn Food Pantry |             10 |                 1 |       9 |
-  | Roxbury         | Boston Area Food Bank    |              0 |                 0 |       0 |
+  | Roxbury         | Boston Area Food Bank    |            275 |                 3 |     272 |
+  | Downtown Boston | Boston Area Food Bank    |            248 |                19 |     229 |
+  | Dorchester      | Boston Area Food Bank    |            110 |                 5 |     105 |
+  | Lynn North      | Greater Lynn Food Pantry |            100 |                 2 |      98 |
+  | Lynn Harbor     | Greater Lynn Food Pantry |             75 |                 6 |      69 |
+  | Jamaica Plain   | Boston Area Food Bank    |             60 |                 0 |      60 |
+  | Lynn Central    | Greater Lynn Food Pantry |             45 |                 5 |      40 |
+  | Lynn Woods      | Greater Lynn Food Pantry |             12 |                 3 |       9 |
+  | South End       | Boston Area Food Bank    |              0 |                 0 |       0 |
   | Swampscott      | Greater Lynn Food Pantry |              0 |                 0 |       0 |
   +-----------------+--------------------------+----------------+-------------------+---------+
 */
@@ -229,7 +229,7 @@ WHERE bt.total_distributed = (
   +-----------------+-----------------------+-------------------+
   | branch_name     | food_bank_name        | total_distributed |
   |-----------------|-----------------------|-------------------|
-  | Downtown Boston | Boston Area Food Bank |                17 |
+  | Downtown Boston | Boston Area Food Bank |                19 |
   +-----------------+-----------------------+-------------------+
 */
 
