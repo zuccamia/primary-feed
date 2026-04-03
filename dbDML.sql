@@ -136,29 +136,6 @@ INSERT INTO food_items (sku, food_name, food_description, storage_condition, cat
   ('SKU-010', 'Baby Formula (900g)','Infant formula stage 1',          'Cool dry place',  10);
 
 -- ─────────────────────────────────────────
--- INVENTORIES
--- Same SKU can appear multiple times per branch with different expiry dates (different batches)
--- ─────────────────────────────────────────
-INSERT INTO inventories (food_sku, branch_id, quantity, unit, expiry_date) VALUES
-  ('SKU-001', 1,  120, 'cans',    '2026-12-31 00:00:00'),
-  ('SKU-001', 1,   40, 'cans',    '2026-04-03 00:00:00'), -- older batch, expiring soon
-  ('SKU-002', 1,   30, 'liters',  '2026-04-10 00:00:00'),
-  ('SKU-003', 2,   50, 'bags',    '2026-05-01 00:00:00'),
-  ('SKU-003', 3,   25, 'bags',    '2026-05-15 00:00:00'), -- same SKU, different branch and expiry
-  ('SKU-004', 3,  200, 'bags',    '2027-06-30 00:00:00'),
-  ('SKU-005', 4,   80, 'lbs',     '2026-09-15 00:00:00'),
-  ('SKU-005', 4,   30, 'lbs',     '2026-06-01 00:00:00'), -- second batch, earlier expiry
-  ('SKU-006', 5,   60, 'liters',  '2026-08-20 00:00:00'),
-  ('SKU-007', 6,   45, 'bottles', '2027-01-01 00:00:00'),
-  ('SKU-008', 7,  100, 'bags',    '2027-03-01 00:00:00'),
-  ('SKU-009', 8,   75, 'boxes',   '2026-11-30 00:00:00'),
-  ('SKU-010', 9,   20, 'tins',    '2026-07-15 00:00:00'),
-  ('SKU-011', 1,   60, 'cans',    '2026-10-01 00:00:00'); -- second Canned Good at Downtown Boston
-
--- Reduce Baby Formula quantity to simulate stock being consumed after distributions
-UPDATE inventories SET quantity = 12 WHERE food_sku = 'SKU-010' AND branch_id = 9;
-
--- ─────────────────────────────────────────
 -- VOLUNTEER_SHIFTS
 -- ─────────────────────────────────────────
 INSERT INTO volunteer_shifts (volunteer_id, branch_id, shift_date, shift_time_start, shift_time_end, shift_notes) VALUES
@@ -205,6 +182,17 @@ INSERT INTO beneficiaries (beneficiary_full_name, household_size, phone, email, 
 UPDATE beneficiaries SET eligibility_status = 1 WHERE beneficiary_id = 6;
 
 -- ─────────────────────────────────────────
+-- INVENTORIES
+-- Same SKU can appear multiple times per branch with different expiry dates (different batches)
+-- ─────────────────────────────────────────
+INSERT INTO inventories (food_sku, branch_id, quantity, unit, expiry_date) VALUES
+  ('SKU-001', 1, 0, 'cans', '2026-04-03 00:00:00'),
+  ('SKU-001', 1, 0, 'cans', '2026-12-31 00:00:00');
+
+-- Reduce Baby Formula quantity to simulate a manual stock correction
+UPDATE inventories SET quantity = 12 WHERE food_sku = 'SKU-010' AND branch_id = 9;
+
+-- ─────────────────────────────────────────
 -- DONATIONS
 -- ─────────────────────────────────────────
 INSERT INTO donations (branch_id, donor_id, staff_id, donation_date) VALUES
@@ -215,22 +203,38 @@ INSERT INTO donations (branch_id, donor_id, staff_id, donation_date) VALUES
   (5, 5, 3, '2026-03-15 13:00:00'),
   (6, 6, 4, '2026-03-18 10:00:00'),
   (7, 7, 5, '2026-03-20 15:00:00'),
-  (8, 8, 5, '2026-03-22 09:00:00');
+  (8, 8, 5, '2026-03-22 09:00:00'),
+  (4, 1, 1, '2026-03-24 10:00:00'),
+  (9, 2, 5, '2026-03-25 10:00:00');
 
 -- ─────────────────────────────────────────
 -- DONATION_ITEMS
 -- ─────────────────────────────────────────
-INSERT INTO donation_items (donation_id, quantity, inventory_id) VALUES
-  (1, 50, 1),
-  (1, 30, 4),
-  (2, 20, 3),
-  (2, 15, 12),
-  (3, 10, 2),
-  (4, 25, 7),
-  (5, 40, 9),
-  (6, 20, 10),
-  (7, 35, 11),
-  (8, 10, 13);
+INSERT INTO donation_items (donation_id, food_sku, quantity, unit, expiry_date) VALUES
+  -- donation 1 at branch 1: increments pre-seeded SKU-001 batches
+  (1, 'SKU-001', 120, 'cans', '2026-12-31 00:00:00'),
+  (1, 'SKU-001', 38, 'cans', '2026-04-03 00:00:00'),
+  (1, 'SKU-011', 60, 'cans', '2026-10-01 00:00:00'),
+  -- donation 2 at branch 1: creates SKU-002
+  (2, 'SKU-002', 30, 'liters', '2026-04-10 00:00:00'),
+  -- donation 3 at branch 3: creates SKU-003 at branch 3
+  (3, 'SKU-003', 25, 'bags', '2026-05-15 00:00:00'),
+  -- donation 4 at branch 3: creates SKU-003 at branch 3 different expiry, SKU-004
+  (4, 'SKU-003', 50, 'bags', '2026-05-01 00:00:00'),
+  (4, 'SKU-004', 200, 'bags', '2027-06-30 00:00:00'),
+  -- donation 5 at branch 5: creates SKU-006
+  (5, 'SKU-006', 60, 'liters', '2026-08-20 00:00:00'),
+  -- donation 6 at branch 6: creates SKU-007
+  (6, 'SKU-007', 45, 'bottles', '2027-01-01 00:00:00'),
+  -- donation 7 at branch 7: creates SKU-008
+  (7, 'SKU-008', 100, 'bags', '2027-03-01 00:00:00'),
+  -- donation 8 at branch 8: creates SKU-009
+  (8, 'SKU-009', 75, 'boxes', '2026-11-30 00:00:00'),
+  -- donation 9 at branch 4: creates SKU-005 two batches
+  (9, 'SKU-005',  80, 'lbs', '2026-09-15 00:00:00'), 
+  (9, 'SKU-005',  30, 'lbs', '2026-06-01 00:00:00'),
+  -- donation 10 at branch 9: creates SKU-010
+  (10, 'SKU-010', 12, 'tins', '2026-07-15 00:00:00');
 
 -- ─────────────────────────────────────────
 -- DISTRIBUTIONS
