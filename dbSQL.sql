@@ -27,12 +27,14 @@ ORDER BY i.expiry_date ASC;
 
 /*
   Expected output (branch_id = 1 has SKU-001 in two batches, and SKU-002):
-
+  +---------+------------------+----------+--------+---------------------+-----------------+
   | sku     | food_name        | quantity | unit   | expiry_date         | branch_name     |
   |---------|------------------|----------|--------|---------------------|-----------------|
-  | SKU-001 | Canned Chickpeas | 40       | cans   | 2026-04-05 00:00:00 | Downtown Boston |
-  | SKU-002 | Whole Milk (1L)  | 30       | liters | 2026-04-10 00:00:00 | Downtown Boston |
-  | SKU-001 | Canned Chickpeas | 120      | cans   | 2026-12-31 00:00:00 | Downtown Boston |
+  | SKU-001 | Canned Chickpeas |       40 | cans   | 2026-04-03 00:00:00 | Downtown Boston |
+  | SKU-002 | Whole Milk (1L)  |       30 | liters | 2026-04-10 00:00:00 | Downtown Boston |
+  | SKU-011 | Canned Tomatoes  |       60 | cans   | 2026-10-01 00:00:00 | Downtown Boston |
+  | SKU-001 | Canned Chickpeas |      120 | cans   | 2026-12-31 00:00:00 | Downtown Boston |
+  +---------+------------------+----------+--------+---------------------+-----------------+
 */
 
 
@@ -59,10 +61,11 @@ ORDER BY i.expiry_date ASC;
 
 /*
   Expected output (assuming today is 2026-04-01, SKU-001 old batch expires 2026-04-03):
-
+  +-----------------+---------+------------------+----------+------+---------------------+
   | branch_name     | sku     | food_name        | quantity | unit | expiry_date         |
   |-----------------|---------|------------------|----------|------|---------------------|
   | Downtown Boston | SKU-001 | Canned Chickpeas | 40       | cans | 2026-04-03 00:00:00 |
+  +-----------------+---------+------------------+----------+------+---------------------+
 */
 
 
@@ -94,10 +97,11 @@ ORDER BY total_distributed DESC;
 
 /*
   Expected output:
-
+  +---------------+------------+-------------------+
   | category_name | item_count | total_distributed |
   |---------------|------------|-------------------|
-  | Canned Goods  | 2          | 11                |
+  | Canned Goods  |          2 |                14 |
+  +---------------+------------+-------------------+
 */
 
 
@@ -123,12 +127,13 @@ ORDER BY total_hours DESC;
 
 /*
   Expected output:
-
+  +------------+-----------+---------------+-------------+
   | first_name | last_name | shifts_worked | total_hours |
   |------------|-----------|---------------|-------------|
   | Eva        | Patel     | 3             | 10          |
   | Carol      | Lee       | 3             | 9           |
   | Grace      | Wang      | 2             | 8           |
+  +------------+-----------+---------------+-------------+
 */
 
 
@@ -174,10 +179,10 @@ ORDER BY surplus DESC;
 
 /*
   Expected output:
-
+  +-----------------+--------------------------+----------------+-------------------+---------+
   | branch_name     | food_bank_name           | total_received | total_distributed | surplus |
   |-----------------|--------------------------|----------------|-------------------|---------|
-  | Downtown Boston | Boston Area Food Bank    |             80 |                14 |      66 |
+  | Downtown Boston | Boston Area Food Bank    |             80 |                17 |      63 |
   | Jamaica Plain   | Boston Area Food Bank    |             40 |                 5 |      35 |
   | Lynn North      | Greater Lynn Food Pantry |             35 |                 6 |      29 |
   | South End       | Boston Area Food Bank    |             30 |                 5 |      25 |
@@ -187,6 +192,7 @@ ORDER BY surplus DESC;
   | Lynn Woods      | Greater Lynn Food Pantry |             10 |                 1 |       9 |
   | Roxbury         | Boston Area Food Bank    |              0 |                 0 |       0 |
   | Swampscott      | Greater Lynn Food Pantry |              0 |                 0 |       0 |
+  +-----------------+--------------------------+----------------+-------------------+---------+
 */
 
 
@@ -220,10 +226,11 @@ WHERE bt.total_distributed = (
 
 /*
   Expected output:
-
+  +-----------------+-----------------------+-------------------+
   | branch_name     | food_bank_name        | total_distributed |
   |-----------------|-----------------------|-------------------|
-  | Downtown Boston | Boston Area Food Bank | 14                |
+  | Downtown Boston | Boston Area Food Bank |                17 |
+  +-----------------+-----------------------+-------------------+
 */
 
 
@@ -266,10 +273,11 @@ ORDER BY ratio DESC;
 
 /*
   Expected output:
-
-  | branch_name     | food_bank_name        | volunteer_count | distribution_count | ratio |
-  |-----------------|-----------------------|-----------------|--------------------|-------|
-  | Lynn Central | Greater Lynn Food Pantry |               1 |                  1 |  1.00 |
-  | Lynn North   | Greater Lynn Food Pantry |               1 |                  1 |  1.00 |
-  | Roxbury      | Boston Area Food Bank    |               1 |                  2 |  0.50 |
+  +-----------------+--------------------------+-----------------+--------------------+-------+
+  | branch_name     | food_bank_name           | volunteer_count | distribution_count | ratio |
+  |-----------------|--------------------------|-----------------|--------------------|-------|
+  | Lynn Central    | Greater Lynn Food Pantry |               1 |                  1 |  1.00 |
+  | Lynn North      | Greater Lynn Food Pantry |               1 |                  1 |  1.00 |
+  | Roxbury         | Boston Area Food Bank    |               1 |                  2 |  0.50 |
+  +-----------------+--------------------------+-----------------+--------------------+-------+
 */

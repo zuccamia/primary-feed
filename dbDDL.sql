@@ -296,9 +296,9 @@ CREATE TABLE IF NOT EXISTS distributions (
     REFERENCES staff (staff_id)
 );
 
--- ─────────────────────────────────────────
+-- ──────────
 -- DISTRIBUTION_ITEMS
--- ─────────────────────────────────────────
+-- ────────────────────
 CREATE TABLE IF NOT EXISTS distribution_items (
   distribution_item_id INT NOT NULL AUTO_INCREMENT,
   distribution_id      INT NOT NULL,
@@ -313,3 +313,31 @@ CREATE TABLE IF NOT EXISTS distribution_items (
     FOREIGN KEY (inventory_id)
     REFERENCES inventories (inventory_id)
 );
+
+-- ──────────────────────────
+-- Create triggers & procedures
+-- ──────────────────────────
+SELECT 'Create triggers...' as message;
+source dbTRIGGERS.sql;
+
+SELECT
+  TRIGGER_NAME,
+  EVENT_MANIPULATION AS event,
+  EVENT_OBJECT_TABLE AS table_name,
+  ACTION_TIMING      AS timing
+FROM INFORMATION_SCHEMA.TRIGGERS
+WHERE TRIGGER_SCHEMA = 'primaryfeed';
+
+SELECT 'Create procedures...' as message;
+source dbPROC.sql;
+
+SELECT
+  ROUTINE_NAME        AS procedure_name,
+  PARAMETER_STYLE     AS param_style,
+  IS_DETERMINISTIC    AS "deterministic",
+  SQL_DATA_ACCESS     AS data_access,
+  SECURITY_TYPE       AS security,
+  LAST_ALTERED        AS last_modified
+FROM INFORMATION_SCHEMA.ROUTINES
+WHERE ROUTINE_SCHEMA = 'primaryfeed'
+  AND ROUTINE_TYPE   = 'PROCEDURE';

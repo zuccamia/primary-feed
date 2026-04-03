@@ -152,7 +152,7 @@ INSERT INTO inventories (food_sku, branch_id, quantity, unit, expiry_date) VALUE
   ('SKU-007', 6,   45, 'bottles', '2027-01-01 00:00:00'),
   ('SKU-008', 7,  100, 'bags',    '2027-03-01 00:00:00'),
   ('SKU-009', 8,   75, 'boxes',   '2026-11-30 00:00:00'),
-  ('SKU-010', 9,   20, 'tins',    '2026-07-15 00:00:00');
+  ('SKU-010', 9,   20, 'tins',    '2026-07-15 00:00:00'),
   ('SKU-011', 1,   60, 'cans',    '2026-10-01 00:00:00'); -- second Canned Good at Downtown Boston
 
 -- Reduce Baby Formula quantity to simulate stock being consumed after distributions
@@ -261,7 +261,7 @@ INSERT INTO distribution_items (distribution_id, quantity, inventory_id) VALUES
   (7, 6,  11),
   (8, 1,  13),
   (9, 4,  1),
-  (9, 3,  4);
+  (9, 3,  4),
   (9, 3,  14); -- SKU-011 distributed in distribution 9
 
 -- ─────────────────────────────────────────

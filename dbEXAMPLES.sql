@@ -13,19 +13,6 @@ CALL record_donation(1, 1, 1, 'SKU-001', 30, 'cans', '2027-12-31 00:00:00');
 SELECT 'record_donation call completed.' AS message;
 
 -- ─────────────────────────────────────────
-
-SELECT 'Calling record_distribution: distributing 5 cans of SKU-001 at Downtown Boston to beneficiary 1 (FIFO)...' AS message;
-
-CALL record_distribution(1, 1, 1, 'SKU-001', 5);
-
-SELECT 'record_distribution call completed.' AS message;
-
-
--- ═══════════════════════════════════════════════════════════════════
--- VERIFICATION QUERIES
--- ═══════════════════════════════════════════════════════════════════
-
--- ─────────────────────────────────────────
 -- 1. Verify record_donation worked:
 --    Check the new donation header was created
 -- ─────────────────────────────────────────
@@ -46,9 +33,11 @@ LIMIT 1;
 
 /*
   Expected output (most recent donation):
+  +-------------+-----------------------+-----------------+-------------+----------------+
   | donation_id | food_bank             | branch_name     | donor_name  | donation_date  |
   |-------------|-----------------------|-----------------|-------------|----------------|
   | 9           | Boston Area Food Bank | Downtown Boston | John Carter | 2026-04-01 ... |
+  +-------------+-----------------------+-----------------+-------------+----------------+
 */
 
 -- ─────────────────────────────────────────
@@ -59,6 +48,7 @@ SELECT '[ Verification 2 ] Checking donation item linked to inventory batch...' 
 
 SELECT
   di.donation_id,
+  di.donation_item_id,
   fi.sku,
   fi.food_name,
   di.quantity,
@@ -73,11 +63,20 @@ WHERE di.donation_id = (SELECT MAX(donation_id) FROM donations);
   Expected output:
   The donation creates a new inventory batch expiring 2027-12-31 with quantity 30,
   since no existing batch at branch 1 has that expiry date.
-
-  | donation_id | sku     | food_name        | quantity | expiry_date         | current_inventory_qty |
-  |-------------|---------|------------------|----------|---------------------|-----------------------|
-  | 9           | SKU-001 | Canned Chickpeas | 30       | 2027-12-31 00:00:00 | 30                    |
+  +-------------+------------------+---------+------------------+----------+-----------------------+---------------------+
+  | donation_id | donation_item_id | sku     | food_name        | quantity | expiry_date         | current_inventory_qty |
+  |-------------|------------------|---------|------------------|----------|-----------------------|---------------------|
+  | 9           |               11 | SKU-001 | Canned Chickpeas | 30       | 2027-12-31 00:00:00 | 30                    |
+  +-------------+------------------+---------+------------------+----------+-----------------------+---------------------+
 */
+
+-- ─────────────────────────────────────────
+
+SELECT 'Calling record_distribution: distributing 5 cans of SKU-001 at Downtown Boston to beneficiary 1 (FIFO)...' AS message;
+
+CALL record_distribution(1, 1, 1, 'SKU-001', 5);
+
+SELECT 'record_distribution call completed.' AS message;
 
 -- ─────────────────────────────────────────
 -- 3. Verify record_distribution worked:
@@ -98,9 +97,11 @@ LIMIT 1;
 
 /*
   Expected output (most recent distribution):
+  +-----------------+-----------------+-----------------------+---------------------+
   | distribution_id | branch_name     | beneficiary_full_name | distribution_date   |
   |-----------------|-----------------|-----------------------|---------------------|
-  | 10              | Downtown Boston | Linda Park            | 2026-04-01 ...      |
+  | 10              | Downtown Boston | Linda Park            | 2026-04- ...      |
+  +-----------------+-----------------+-----------------------+---------------------+
 */
 
 -- ─────────────────────────────────────────
@@ -128,13 +129,14 @@ ORDER BY i.expiry_date ASC;
   FIFO picks inventory_id = 2 (expiry 2026-04-03) first, so that batch is decremented.
   inventory_id = 1 (expiry 2026-12-31) is untouched.
   New batch from donation call has quantity 30.
-
+  +--------------+---------+------------------+-----------------+---------------+---------------------+
   | inventory_id | sku     | food_name        | branch_name     | remaining_qty | expiry_date         |
   |--------------|---------|------------------|-----------------|---------------|---------------------|
   | 2            | SKU-001 | Canned Chickpeas | Downtown Boston | 35            | 2026-04-03 00:00:00 |
   | 1            | SKU-001 | Canned Chickpeas | Downtown Boston | 120           | 2026-12-31 00:00:00 |
   | (new)        | SKU-001 | Canned Chickpeas | Downtown Boston | 30            | 2027-12-31 00:00:00 |
   (batch 2: 40 - 5 distributed = 35)
+  +--------------+---------+------------------+-----------------+---------------+---------------------+
 */
 
 -- ─────────────────────────────────────────

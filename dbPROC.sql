@@ -1,7 +1,7 @@
 -- PrimaryFeed Stored Procedures
 -- Procedures:
---   1. record_donation    — inserts a donation + donation_item, increments or creates inventory batch
---   2. record_distribution — inserts a distribution + distribution_item, decrements inventory batch
+--   1. record_donation: inserts a donation + donation_item, increments or creates inventory batch
+--   2. record_distribution: inserts a distribution + distribution_item, decrements inventory batch
 
 USE primaryfeed;
 
@@ -16,13 +16,13 @@ DELIMITER $$
 -- Otherwise a new inventory batch row is created.
 --
 -- Parameters:
---   p_branch_id    — branch receiving the donation
---   p_donor_id     — donor making the donation
---   p_staff_id     — staff member recording the donation
---   p_food_sku     — SKU of the donated food item
---   p_quantity     — quantity donated
---   p_unit         — unit of measurement (e.g. 'cans', 'bags')
---   p_expiry_date  — expiry date of the donated batch
+--   p_branch_id:  branch receiving the donation
+--   p_donor_id: donor making the donation
+--   p_staff_id: staff member recording the donation
+--   p_food_sku: SKU of the donated food item
+--   p_quantity: quantity donated
+--   p_unit: unit of measurement (e.g. 'cans', 'bags')
+--   p_expiry_date: expiry date of the donated batch
 -- ═══════════════════════════════════════════════════════════════════
 DROP PROCEDURE IF EXISTS record_donation$$
 
@@ -93,13 +93,13 @@ END$$
 -- in the oldest batch, or if no batch is found.
 --
 -- Parameters:
---   p_branch_id      — branch performing the distribution
---   p_beneficiary_id — beneficiary receiving the food
---   p_staff_id       — staff member recording the distribution
---   p_food_sku       — SKU of the food item being distributed
---   p_quantity       — quantity to distribute
+--   p_branch_id: branch performing the distribution
+--   p_beneficiary_id:  beneficiary receiving the food
+--   p_staff_id: staff member recording the distribution
+--   p_food_sku: SKU of the food item being distributed
+--   p_quantity: quantity to distribute
 -- ═══════════════════════════════════════════════════════════════════
-DROP PROCEDURE IF EXISTS record_distribution$
+DROP PROCEDURE IF EXISTS record_distribution$$
 
 CREATE PROCEDURE record_distribution(
   IN p_branch_id      INT,
@@ -159,7 +159,6 @@ BEGIN
     WHERE inventory_id = v_inventory_id;
 
   COMMIT;
-END$
+END$$
 
 DELIMITER ;
-

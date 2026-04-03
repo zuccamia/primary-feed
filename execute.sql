@@ -11,18 +11,29 @@ SELECT 'Create database PrimaryFeed and tables...' as message;
 source dbDDL.sql;
 
 -- ───────────────────────────────────────
--- Create triggers and procedures
--- ────────────────────
-SELECT 'Create triggers...' as message;
-source dbTRIGGERS.sql;
-SELECT 'Create procedures...' as message;
-source dbPROC.sql
-
--- ───────────────────────────────────────
 -- Seed sample data
 -- ───────────────────────────────────────
 SELECT 'Seed tables with sample data...' as message;
 source dbDML.sql;
+
+SELECT 'addresses' AS table_name; SELECT * FROM addresses;
+SELECT 'food_banks' AS table_name; SELECT * FROM food_banks;
+SELECT 'food_bank_branches' AS table_name; SELECT * FROM food_bank_branches;
+SELECT 'users' AS table_name; SELECT * FROM users;
+SELECT 'volunteers' AS table_name; SELECT * FROM volunteers;
+SELECT 'staff' AS table_name; SELECT * FROM staff;
+SELECT 'admin_permissions' AS table_name; SELECT * FROM admin_permissions;
+SELECT 'staff_admin_permissions' AS table_name; SELECT * FROM staff_admin_permissions;
+SELECT 'food_categories' AS table_name; SELECT * FROM food_categories;
+SELECT 'food_items' AS table_name; SELECT * FROM food_items;
+SELECT 'inventories' AS table_name; SELECT * FROM inventories;
+SELECT 'volunteer_shifts' AS table_name; SELECT * FROM volunteer_shifts;
+SELECT 'donors' AS table_name; SELECT * FROM donors;
+SELECT 'donations' AS table_name; SELECT * FROM donations;
+SELECT 'donation_items' AS table_name; SELECT * FROM donation_items;
+SELECT 'beneficiaries' AS table_name; SELECT * FROM beneficiaries;
+SELECT 'distributions' AS table_name; SELECT * FROM distributions;
+SELECT 'distribution_items' AS table_name; SELECT * FROM distribution_items;
 
 -- ───────────────────────────────────────
 -- Sample SQL queries
